@@ -1,4 +1,0 @@
-INDEX VERSION 1.134+/Users/tina/dev/oop-java/case-study/.metadata/.plugins/org.eclipse.jdt.core
-2573239162.index
-1079391840.index
-1865797976.index

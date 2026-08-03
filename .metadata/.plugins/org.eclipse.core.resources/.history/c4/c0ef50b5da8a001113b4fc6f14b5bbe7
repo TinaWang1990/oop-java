@@ -1,9 +1,0 @@
-package BankAccount;
-
-public class CheckingAccount extends BankAccount{
-
-	public CheckingAccount() {
-		
-	}
-
-}

@@ -1,0 +1,6 @@
+package BankAccount;
+
+public class Bank {
+	
+	 private List<BankAccount> accounts = new ArrayList<>(;)
+}

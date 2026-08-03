@@ -1,0 +1,9 @@
+package BankAccount;
+
+public class CheckingAccount {
+
+	public CheckingAccount() {
+		// TODO Auto-generated constructor stub
+	}
+
+}

@@ -1,0 +1,80 @@
+package BankAccount;
+
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
+
+public class BankGUI extends JFrame {
+	
+	private JTextField accNumberField;
+	private JTextField holderField;
+    private JTextField amountField;
+    private JTextField rateOrLimitField;
+    private JComboBox<String> typeCombo;
+    private JTextArea logArea;  
+    private DefaultTableModel tableModel;
+	
+	public BankGUI( ) {
+		super("Bank Account Management System");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(850, 620);
+		setLocationRelativeTo(null);
+		initComponents();
+		
+	}
+	
+	public void initComponents() {
+		setLayout(new BorderLayout(10, 10));
+		
+		// ---- Top: form panel for creating accounts / entering amounts ----
+        JPanel formPanel = new JPanel(new GridLayout(2, 6, 5, 5));
+        formPanel.setBorder(BorderFactory.createTitledBorder("Account Operations"));
+
+        accNumberField = new JTextField();
+        holderField = new JTextField();
+        amountField = new JTextField();
+        rateOrLimitField = new JTextField();
+        typeCombo = new JComboBox<String>(new String[]{"Savings", "Checking"});
+
+        formPanel.add(new JLabel("Acc Number:"));
+        formPanel.add(new JLabel("Holder:"));
+        formPanel.add(new JLabel("Type:"));
+        formPanel.add(new JLabel("Balance / Amount:"));
+        formPanel.add(new JLabel("Rate (Savings) / Limit (Checking):"));
+        formPanel.add(new JLabel(""));
+
+        formPanel.add(accNumberField);
+        formPanel.add(holderField);
+        formPanel.add(typeCombo);
+        formPanel.add(amountField);
+        formPanel.add(rateOrLimitField);
+
+        JButton createBtn = new JButton("Create Account");
+        formPanel.add(createBtn);
+
+        add(formPanel, BorderLayout.NORTH);
+        
+        // ---- Center: table listing all accounts ----
+        tableModel = new DefaultTableModel(new Object[] {"Type", "Account #", "Holder", "Balance", "Interest"}, 0);
+        
+	}
+
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				new BankGUI().setVisible(true);
+			}
+		});
+	}
+
+}

@@ -1,0 +1,13 @@
+package BankAccount;
+
+public class CheckingAccount extends BankAccount{
+	private static final long serialVersionUID = 1L;
+	
+	private double overdraftLimit;
+
+	public CheckingAccount(String accountNumber, String accountHolder, double balance, double overdraftLimit) {
+		super(accountNumber, accountHolder, balance);
+		this.overdraftLimit = overdraftLimit;
+	}
+
+}

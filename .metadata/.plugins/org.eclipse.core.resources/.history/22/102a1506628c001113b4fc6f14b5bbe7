@@ -1,0 +1,11 @@
+package BankAccount;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Bank {
+	
+	 private List<BankAccount> accounts = new ArrayList<>();
+	 private static final String DATA_FILE = "accounts.txt";
+	 
+}

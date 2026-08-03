@@ -1,0 +1,257 @@
+package BankAccount;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * Console-based test harness for the Bank Account Management System.
+ * No external testing library is required - just run this class as a
+ * plain Java Application (Run As > Java Application in Eclipse).
+ *
+ * Demonstrates CLR 9 (tested code) and CLR 10: test cases are grouped into
+ *   1) valid data only
+ *   2) invalid data only
+ *   3) a combination of valid and invalid data
+ *
+ * Each check prints [PASS] or [FAIL] with the expected vs. actual result,
+ * and a summary is printed at the end - convenient for screenshot evidence.
+ */
+public class BankAccountTester {
+
+    private static int passCount = 0;
+    private static int failCount = 0;
+
+    public static void main(String[] args) {
+        System.out.println("=================================================");
+        System.out.println(" BANK ACCOUNT MANAGEMENT SYSTEM - TEST RUN");
+        System.out.println("=================================================\n");
+
+        testValidData();
+        testInvalidData();
+        testCombinedData();
+        testFileIOAndPolymorphism();
+
+        System.out.println("\n=================================================");
+        System.out.println(" SUMMARY: " + passCount + " passed, " + failCount + " failed, "
+                + (passCount + failCount) + " total");
+        System.out.println("=================================================");
+    }
+
+    // =========================================================
+    // 1) VALID DATA ONLY
+    // =========================================================
+    private static void testValidData() {
+        System.out.println("--- 1) Tests using VALID data only ---");
+
+        SavingsAccount savings = new SavingsAccount("SA001", "Alice", 500.0, 0.05);
+        checkEquals("New savings account balance", 500.0, savings.getBalance());
+
+        savings.deposit(100.0);
+        checkEquals("Balance after valid deposit(100)", 600.0, savings.getBalance());
+
+        savings.deposit(50.0, "Birthday gift"); // overloaded deposit(amount, note)
+        checkEquals("Balance after valid deposit(50, note)", 650.0, savings.getBalance());
+
+        try {
+            savings.withdraw(50.0); // leaves 600, still above the $100 minimum
+            checkEquals("Balance after valid withdraw(50)", 600.0, savings.getBalance());
+        } catch (InsufficientFundsException ex) {
+            check("Valid withdraw should not throw", false);
+        }
+
+        checkEquals("Savings interest (600 * 0.05)", 30.0, savings.calculateInterest());
+        check("getAccountType() == \"Savings\"", "Savings".equals(savings.getAccountType()));
+
+        CheckingAccount checking = new CheckingAccount("CA001", "Bob", 300.0, 200.0);
+        try {
+            checking.withdraw(400.0); // 300 - 400 = -100, within the -200 overdraft limit
+            checkEquals("Checking balance after valid overdraft withdraw", -100.0, checking.getBalance());
+        } catch (InsufficientFundsException ex) {
+            check("Valid overdraft withdraw should not throw", false);
+        }
+        checkEquals("Checking account interest is always 0", 0.0, checking.calculateInterest());
+
+        System.out.println();
+    }
+
+    // =========================================================
+    // 2) INVALID DATA ONLY
+    // =========================================================
+    private static void testInvalidData() {
+        System.out.println("--- 2) Tests using INVALID data only ---");
+
+        SavingsAccount savings = new SavingsAccount("SA002", "Carol", 200.0, 0.03);
+
+        // Invalid: negative deposit amount
+        try {
+            savings.deposit(-50.0);
+            check("Negative deposit should throw IllegalArgumentException", false);
+        } catch (IllegalArgumentException ex) {
+            check("Negative deposit throws IllegalArgumentException", true);
+        }
+
+        // Invalid: withdrawal that breaks the $100 minimum balance rule
+        try {
+            savings.withdraw(150.0); // 200 - 150 = 50, below the $100 minimum
+            check("Withdrawal breaking minimum balance should throw", false);
+        } catch (InsufficientFundsException ex) {
+            check("Withdrawal breaking minimum balance throws InsufficientFundsException", true);
+        }
+
+        // Invalid: negative withdrawal amount
+        try {
+            savings.withdraw(-10.0);
+            check("Negative withdrawal should throw IllegalArgumentException", false);
+        } catch (InsufficientFundsException ex) {
+            check("Negative withdrawal raised the wrong exception type", false);
+        } catch (IllegalArgumentException ex) {
+            check("Negative withdrawal throws IllegalArgumentException", true);
+        }
+
+        CheckingAccount checking = new CheckingAccount("CA002", "Dave", 100.0, 200.0);
+        // Invalid: withdrawal that exceeds the overdraft limit
+        try {
+            checking.withdraw(500.0); // 100 - 500 = -400, exceeds -200 limit
+            check("Withdrawal exceeding overdraft limit should throw", false);
+        } catch (InsufficientFundsException ex) {
+            check("Withdrawal exceeding overdraft limit throws InsufficientFundsException", true);
+        }
+
+        // Invalid: looking up an account that does not exist
+        Bank bank = new Bank();
+        bank.addAccount(savings);
+        BankAccount notFound = bank.findAccount("DOES-NOT-EXIST");
+        check("findAccount() with unknown account number returns null", notFound == null);
+
+        System.out.println();
+    }
+
+    // =========================================================
+    // 3) COMBINATION OF VALID AND INVALID DATA
+    // =========================================================
+    private static void testCombinedData() {
+        System.out.println("--- 3) Tests using a COMBINATION of valid and invalid data ---");
+
+        SavingsAccount savings = new SavingsAccount("SA003", "Eve", 300.0, 0.04);
+
+        // Step 1 (valid): deposit
+        savings.deposit(200.0);
+        checkEquals("Combined test - balance after valid deposit", 500.0, savings.getBalance());
+
+        // Step 2 (invalid): withdrawal that would break the minimum balance
+        try {
+            savings.withdraw(450.0); // 500 - 450 = 50 < 100
+            check("Combined test - invalid withdraw should throw", false);
+        } catch (InsufficientFundsException ex) {
+            check("Combined test - invalid withdraw correctly rejected", true);
+        }
+
+        // Balance must be unchanged after the rejected withdrawal
+        checkEquals("Combined test - balance unchanged after rejected withdraw", 500.0, savings.getBalance());
+
+        // Step 3 (valid): a smaller, legal withdrawal now succeeds
+        try {
+            savings.withdraw(100.0); // 500 - 100 = 400, still above the minimum
+            checkEquals("Combined test - balance after valid withdraw", 400.0, savings.getBalance());
+        } catch (InsufficientFundsException ex) {
+            check("Combined test - valid withdraw should not throw", false);
+        }
+
+        // Step 4 (invalid): negative deposit again, should still be rejected and not change state
+        try {
+            savings.deposit(-25.0);
+            check("Combined test - negative deposit should throw", false);
+        } catch (IllegalArgumentException ex) {
+            check("Combined test - negative deposit correctly rejected", true);
+        }
+        checkEquals("Combined test - balance unchanged after rejected deposit", 400.0, savings.getBalance());
+
+        System.out.println();
+    }
+
+    // =========================================================
+    // 4) FILE I/O ROUND-TRIP + POLYMORPHISM CHECK
+    // =========================================================
+    private static void testFileIOAndPolymorphism() {
+        System.out.println("--- 4) File I/O round-trip and polymorphism check ---");
+
+        Bank bank = new Bank();
+        bank.addAccount(new SavingsAccount("SA100", "Frank", 1000.0, 0.03));
+        bank.addAccount(new CheckingAccount("CA100", "Grace", 500.0, 150.0));
+
+        // Polymorphism: iterate a List<BankAccount> holding two different
+        // subclasses and confirm each one runs its own calculateInterest().
+        List<BankAccount> accounts = bank.getAccounts();
+        double savingsInterest = 0.0;
+        double checkingInterest = 0.0;
+        for (BankAccount acc : accounts) {
+            if (acc.getAccountType().equals("Savings")) {
+                savingsInterest = acc.calculateInterest();
+            } else {
+                checkingInterest = acc.calculateInterest();
+            }
+        }
+        checkEquals("Polymorphic Savings interest (1000 * 0.03)", 30.0, savingsInterest);
+        checkEquals("Polymorphic Checking interest (always 0)", 0.0, checkingInterest);
+
+        // Valid: save then load into a fresh Bank object
+        try {
+            bank.saveToFile();
+            Bank reloaded = new Bank();
+            reloaded.loadFromFile();
+            check("Reloaded bank has the same number of accounts",
+                    reloaded.getAccounts().size() == accounts.size());
+            BankAccount reloadedSavings = reloaded.findAccount("SA100");
+            check("Reloaded account SA100 exists", reloadedSavings != null);
+            if (reloadedSavings != null) {
+                checkEquals("Reloaded account SA100 balance matches", 1000.0, reloadedSavings.getBalance());
+            }
+        } catch (IOException ex) {
+            check("File save/load should not throw IOException", false);
+        }
+
+        // Invalid/edge case: loading when the file does not exist should not crash
+        File missing = new File("this_file_should_not_exist.txt");
+        if (missing.exists()) {
+            missing.delete();
+        }
+        Bank emptyBank = new Bank();
+        try {
+            // temporarily point at a bank with nothing saved yet is not directly
+            // testable without changing DATA_FILE, so we just confirm loading an
+            // already-loaded, unsaved Bank object does not throw.
+            emptyBank.loadFromFile();
+            check("Loading with no prior save does not throw", true);
+        } catch (IOException ex) {
+            check("Loading with no prior save does not throw", false);
+        }
+
+        System.out.println();
+    }
+
+    // ---------------------------------------------------------
+    // Overloaded assertion helpers
+    // ---------------------------------------------------------
+    private static void check(String testName, boolean passed) {
+        if (passed) {
+            passCount++;
+            System.out.println("[PASS] " + testName);
+        } else {
+            failCount++;
+            System.out.println("[FAIL] " + testName);
+        }
+    }
+
+    private static void checkEquals(String testName, double expected, double actual) {
+        boolean passed = Math.abs(expected - actual) < 0.001;
+        if (passed) {
+            passCount++;
+            System.out.println("[PASS] " + testName + " (expected=" + expected + ", actual=" + actual + ")");
+        } else {
+            failCount++;
+            System.out.println("[FAIL] " + testName + " (expected=" + expected + ", actual=" + actual + ")");
+        }
+    }
+}
+

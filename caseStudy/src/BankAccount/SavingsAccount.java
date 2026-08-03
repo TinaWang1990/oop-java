@@ -1,0 +1,45 @@
+package BankAccount;
+
+public class SavingsAccount extends BankAccount{
+	private static final long serialVersionUID = 1L;
+	private static final double MINIMUM_BALANCE = 100.0;
+	
+	private double interestRate; // e.g. 0.03 = 3%
+	
+	public SavingsAccount(String accountNumber, String accountHolder, double balance) {
+		super(accountNumber, accountHolder, balance);
+		this.interestRate = 0.02; // default 2% when not specified
+	}
+	
+	public SavingsAccount(String accountNumber, String accountHolder, double balance, double interestRate) {
+        super(accountNumber, accountHolder, balance);
+        this.interestRate = interestRate;
+    }
+
+	public double getInterestRate() {
+        return interestRate;
+    }
+	
+	@Override
+    public String getAccountType() {
+        return "Savings";
+    }
+	
+	@Override
+	public double calculateInterest() {
+		return getBalance() * interestRate;
+	}
+	
+	@Override
+	public void withdraw(double amount) throws InsufficientFundsException {
+		if (amount <= 0) {
+            throw new IllegalArgumentException("Withdrawal amount must be positive.");
+        }
+		if (getBalance() - amount < MINIMUM_BALANCE) {
+            throw new InsufficientFundsException(
+            		 "Savings account " + getAccountNumber()
+                     + " must keep a minimum balance of $" + MINIMUM_BALANCE);
+        }
+		setBalance(getBalance() - amount);
+	}
+}

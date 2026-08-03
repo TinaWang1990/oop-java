@@ -1,0 +1,168 @@
+package BankAccount;
+
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.io.IOException;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
+
+public class BankGUI extends JFrame {
+	private static final long serialVersionUID = 1L;
+	
+	private Bank bank = new Bank();
+	
+	private JTextField accNumberField;
+	private JTextField holderField;
+    private JTextField amountField;
+    private JTextField rateOrLimitField;
+    private JComboBox<String> typeCombo;
+    private JTextArea logArea;  
+    private DefaultTableModel tableModel;
+    private JTable table;
+	
+	public BankGUI( ) {
+		super("Bank Account Management System");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(850, 620);
+		setLocationRelativeTo(null);
+		initComponents();
+		loadAccountsFromFile();
+	}
+	
+	public void initComponents() {
+		setLayout(new BorderLayout(10, 10));
+		
+		// ---- Top: form panel for creating accounts / entering amounts ----
+        JPanel formPanel = new JPanel(new GridLayout(2, 6, 5, 5));
+        formPanel.setBorder(BorderFactory.createTitledBorder("Account Operations"));
+
+        accNumberField = new JTextField();
+        holderField = new JTextField();
+        amountField = new JTextField();
+        rateOrLimitField = new JTextField();
+        typeCombo = new JComboBox<String>(new String[]{"Savings", "Checking"});
+
+        formPanel.add(new JLabel("Acc Number:"));
+        formPanel.add(new JLabel("Holder:"));
+        formPanel.add(new JLabel("Type:"));
+        formPanel.add(new JLabel("Balance / Amount:"));
+        formPanel.add(new JLabel("Rate (Savings) / Limit (Checking):"));
+        formPanel.add(new JLabel(""));
+
+        formPanel.add(accNumberField);
+        formPanel.add(holderField);
+        formPanel.add(typeCombo);
+        formPanel.add(amountField);
+        formPanel.add(rateOrLimitField);
+
+        JButton createBtn = new JButton("Create Account");
+        formPanel.add(createBtn);
+
+        add(formPanel, BorderLayout.NORTH);
+        
+        // ---- Center: table listing all accounts ----
+        tableModel = new DefaultTableModel(new Object[] {"Type", "Account #", "Holder", "Balance", "Interest"}, 0);
+        table = new JTable(tableModel);
+        add(new JScrollPane(table), BorderLayout.CENTER);
+        
+        // ---- Bottom: action buttons + activity log ----
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        JPanel btnPanel = new JPanel();
+        JButton depositBtn = new JButton("Deposit");
+        JButton withdrawBtn = new JButton("Withdraw");
+        JButton interestBtn = new JButton("Calc Interest (selected)");
+        JButton saveBtn = new JButton("Save to File");
+        JButton loadBtn = new JButton("Load from File");
+        btnPanel.add(depositBtn);
+        btnPanel.add(withdrawBtn);
+        btnPanel.add(interestBtn);
+        btnPanel.add(saveBtn);
+        btnPanel.add(loadBtn);
+        
+        logArea = new JTextArea(6, 60);
+        logArea.setEditable(false);
+
+        bottomPanel.add(btnPanel, BorderLayout.NORTH);
+        bottomPanel.add(new JScrollPane(logArea), BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
+        
+        // ---- Wire up listeners ----
+        createBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) { onCreateAccount(); }
+        });
+        depositBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) { onDeposit(); }
+        });
+        withdrawBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) { onWithdraw(); }
+        });
+        interestBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) { onCalcInterest(); }
+        });
+        saveBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) { onSave(); }
+        });
+        loadBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(ActionEvent e) { loadAccountsFromFile(); }
+        });
+	}
+	
+	private void onCreateAccount() {
+		
+	}
+	
+	private void onDeposit() {
+		
+	}
+	
+	private void onWithdraw() {
+		
+	}
+
+	private void onCalcInterest() {
+		
+	}
+	
+	private void onSave() {
+		
+	}
+
+	private void loadAccountsFromFile() {
+		try {
+			bank.loadFromFile();
+			log("Accounts loaded from file.");
+		} catch (IOException e) {
+			showError("Failed to load: " + e.getMessage());
+		}
+	}
+	
+	private void log(String msg) {
+		logArea.append(msg);
+	}
+	
+	private void showError(String message) {
+		JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				new BankGUI().setVisible(true);
+			}
+		});
+	}
+
+}
